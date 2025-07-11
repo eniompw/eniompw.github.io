@@ -3,89 +3,424 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Snake Game</title>
+    <title>Simple Mario Game</title>
+    <link rel="icon" type="image/png" href="assets/mario.png">
     <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; }
-        canvas { background: #111; border: 2px solid #0f0; }
-        h1 { color: #0f0; text-align: center; }
+        body { background: #5c94fc; margin: 0; overflow: hidden; }
+        canvas { display: block; margin: 0 auto; background: #8ed0f7; border: 2px solid #333; }
     </style>
 </head>
 <body>
-    <canvas id="game" width="400" height="400"></canvas>
-    <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-        const grid = 20;
-        let count = 0;
-        let snake = [{x: 160, y: 160}];
-        let dx = grid;
-        let dy = 0;
-        let food = {x: 320, y: 320};
-        let gameOver = false;
+<canvas id="game" width="960" height="540"></canvas>
 
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min) / grid) * grid + min;
-        }
-
-        function resetFood() {
-            food.x = getRandomInt(0, canvas.width - grid);
-            food.y = getRandomInt(0, canvas.height - grid);
-        }
-
-        function gameLoop() {
-            if (gameOver) return;
-            requestAnimationFrame(gameLoop);
-            if (++count < 4) return;
-            count = 0;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // Move snake
-            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
-            snake.unshift(head);
-
-            // Check collision with food
-            if (head.x === food.x && head.y === food.y) {
-                resetFood();
-            } else {
-                snake.pop();
-            }
-
-            // Draw food
-            ctx.fillStyle = '#f00';
-            ctx.fillRect(food.x, food.y, grid, grid);
-
-            // Draw snake
-            ctx.fillStyle = '#0f0';
-            snake.forEach((segment, i) => {
-                ctx.fillRect(segment.x, segment.y, grid, grid);
-                // Check collision with self
-                if (i > 0 && head.x === segment.x && head.y === segment.y) {
-                    gameOver = true;
-                    setTimeout(() => alert('Game Over!'), 10);
-                }
-            });
-
-            // Check wall collision
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                gameOver = true;
-                setTimeout(() => alert('Game Over!'), 10);
-            }
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'ArrowLeft' && dx === 0) {
-                dx = -grid; dy = 0;
-            } else if (e.key === 'ArrowUp' && dy === 0) {
-                dx = 0; dy = -grid;
-            } else if (e.key === 'ArrowRight' && dx === 0) {
-                dx = grid; dy = 0;
-            } else if (e.key === 'ArrowDown' && dy === 0) {
-                dx = 0; dy = grid;
-            }
+<audio id="themeMusic" src="https://ia902200.us.archive.org/24/items/SuperMarioBros.ThemeMusic/SuperMarioBros.mp3" loop></audio>
+<button id="playMusicBtn" style="position:fixed;top:20px;right:20px;z-index:10;font-size:20px;display:none;">Play Music</button>
+<script>
+// Theme music controls
+const themeMusic = document.getElementById('themeMusic');
+themeMusic.volume = 0.25;
+let musicStarted = false;
+let musicMuted = false;
+const playMusicBtn = document.getElementById('playMusicBtn');
+function startMusic() {
+    if (!musicStarted) {
+        themeMusic.play().then(() => {
+            musicStarted = true;
+            playMusicBtn.style.display = 'none';
+        }).catch(() => {
+            // Show button if play() fails
+            playMusicBtn.style.display = '';
         });
+    }
+}
+// Try to start music automatically on page load
+window.addEventListener('DOMContentLoaded', () => {
+    startMusic();
+});
+// Button click fallback for music
+playMusicBtn.addEventListener('click', () => {
+    startMusic();
+});
+// Mute/unmute with 'M' key
+window.addEventListener('keydown', function(e) {
+    if (e.code === 'KeyM') {
+        musicMuted = !musicMuted;
+        themeMusic.muted = musicMuted;
+    }
+});
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
 
-        resetFood();
-        requestAnimationFrame(gameLoop);
-    </script>
+// Mario image loading
+const marioImg = new Image();
+marioImg.src = 'assets/mario.png';
+let marioImgLoaded = false;
+marioImg.onload = () => { 
+    marioImgLoaded = true; 
+    console.log('Mario image loaded:', marioImg.width, marioImg.height);
+};
+marioImg.onerror = (e) => {
+    console.error('Failed to load Mario image:', marioImg.src, e);
+};
+
+// Mario properties
+const mario = {
+    x: 75,
+    y: 390,
+    w: 72, // even bigger Mario
+    h: 72, // even bigger Mario
+    vy: 0,
+    onGround: false
+};
+
+// Platform
+const groundY = 438;
+
+// Gravity
+const gravity = 0.8;
+const jumpPower = -18; // higher jump
+
+// Controls
+let keys = {};
+let rightArrowDownTime = 0;
+let lastFrameTime = performance.now();
+document.addEventListener('keydown', e => keys[e.code] = true);
+document.addEventListener('keyup', e => {
+    keys[e.code] = false;
+    if (e.code === 'ArrowRight') rightArrowDownTime = 0;
+});
+
+// Cloud properties
+const clouds = [
+    { x: 150, y: 90, w: 90, h: 45, speed: 0.3 },
+    { x: 450, y: 60, w: 120, h: 60, speed: 0.2 },
+    { x: 750, y: 120, w: 75, h: 38, speed: 0.4 },
+    { x: 300, y: 150, w: 105, h: 53, speed: 0.25 },
+    { x: 600, y: 83, w: 90, h: 45, speed: 0.35 }
+];
+
+// Pipe properties (multiple pipes)
+let pipes = [
+    {
+        x: 800,
+        y: 0, // will be set based on groundY
+        w: 28, // even smaller pipe
+        h: 70, // even smaller pipe
+        speed: 2
+    }
+];
+
+// Flag properties
+const flag = {
+    x: canvas.width - 100,
+    y: groundY - 160,
+    w: 16,
+    h: 160
+};
+
+let gameOver = false;
+let score = 0;
+
+function drawMario() {
+    if (marioImgLoaded) {
+        ctx.drawImage(marioImg, 0, 0, marioImg.width, marioImg.height, mario.x, mario.y, mario.w, mario.h);
+    } else {
+        ctx.fillStyle = '#e63900'; // fallback red hat
+        ctx.fillRect(mario.x, mario.y, mario.w, mario.h);
+        ctx.fillStyle = '#ffe066'; // fallback face
+        ctx.fillRect(mario.x + mario.w/3, mario.y + mario.h/3, mario.w/2, mario.h/2);
+    }
+}
+
+function drawGround() {
+    // Draw all pipes
+    for (let pipe of pipes) {
+        pipe.y = groundY - pipe.h;
+        ctx.fillStyle = '#2ecc40'; // green pipe
+        ctx.fillRect(pipe.x, pipe.y, pipe.w, pipe.h);
+        ctx.fillStyle = '#27ae60'; // darker green for pipe rim
+        ctx.fillRect(pipe.x - 5, pipe.y, pipe.w + 10, 10);
+    }
+}
+
+function drawFloor() {
+    ctx.fillStyle = '#deb887'; // light brown for floor
+    ctx.fillRect(0, groundY, canvas.width, canvas.height - groundY);
+}
+
+function drawCloud(cloud) {
+    ctx.save();
+    ctx.globalAlpha = 0.85;
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.ellipse(cloud.x, cloud.y, cloud.w / 2, cloud.h / 2, 0, 0, Math.PI * 2);
+    ctx.ellipse(cloud.x + cloud.w * 0.3, cloud.y + cloud.h * 0.1, cloud.w / 3, cloud.h / 2.2, 0, 0, Math.PI * 2);
+    ctx.ellipse(cloud.x - cloud.w * 0.3, cloud.y + cloud.h * 0.1, cloud.w / 3, cloud.h / 2.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+}
+
+function drawBackground() {
+    ctx.fillStyle = '#8ed0f7';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    for (let cloud of clouds) {
+        drawCloud(cloud);
+    }
+}
+
+function drawFlag() {
+    // Flag pole
+    ctx.fillStyle = '#bbb';
+    ctx.fillRect(flag.x, flag.y, flag.w, flag.h);
+    // Flag
+    ctx.fillStyle = '#e74c3c';
+    ctx.beginPath();
+    ctx.moveTo(flag.x + flag.w, flag.y + 20);
+    ctx.lineTo(flag.x + flag.w + 40, flag.y + 35);
+    ctx.lineTo(flag.x + flag.w, flag.y + 50);
+    ctx.closePath();
+    ctx.fill();
+    // Flag ball
+    ctx.beginPath();
+    ctx.arc(flag.x + flag.w / 2, flag.y, 10, 0, Math.PI * 2);
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+}
+
+function drawScore() {
+    ctx.font = '28px sans-serif';
+    ctx.fillStyle = '#222';
+    ctx.fillText('Score: ' + score, 30, 40);
+}
+
+function updateMario() {
+    // Horizontal movement with run mechanic
+    let now = performance.now();
+    let dt = (now - lastFrameTime) / 1000;
+    lastFrameTime = now;
+    let speed = 3;
+    if (keys['ArrowRight']) {
+        rightArrowDownTime += dt;
+        if (rightArrowDownTime > 0.2) speed = 6; // run after 0.2s
+        mario.x += speed;
+    } else {
+        rightArrowDownTime = 0;
+    }
+    if (keys['ArrowLeft']) mario.x -= 3;
+    // Jump
+    if (keys['Space'] && mario.onGround) {
+        mario.vy = jumpPower;
+        mario.onGround = false;
+    }
+    // Gravity
+    mario.vy += gravity;
+    mario.y += mario.vy;
+    // Ground collision
+    if (mario.y + mario.h >= groundY) {
+        mario.y = groundY - mario.h;
+        mario.vy = 0;
+        mario.onGround = true;
+    }
+    // Boundaries
+    if (mario.x < 0) mario.x = 0;
+    if (mario.x + mario.w > canvas.width) mario.x = canvas.width - mario.w;
+}
+
+function updateClouds() {
+    for (let cloud of clouds) {
+        cloud.x += cloud.speed;
+        if (cloud.x - cloud.w > canvas.width) {
+            cloud.x = -cloud.w;
+        }
+    }
+}
+
+function updatePipes() {
+    // Determine number of pipes based on score
+    let desiredCount = 1 + Math.floor(score / 2);
+    while (pipes.length < desiredCount) {
+        // Add new pipe at random position off screen
+        let newPipe = {
+            x: canvas.width + Math.random() * 400,
+            y: 0,
+            w: 28,
+            h: 70,
+            speed: 2
+        };
+        pipes.push(newPipe);
+    }
+    // Remove extra pipes if score drops (shouldn't happen, but safe)
+    while (pipes.length > desiredCount) {
+        pipes.pop();
+    }
+    // Update all pipes
+    for (let i = 0; i < pipes.length; i++) {
+        let pipe = pipes[i];
+        if (pipes.length > 2) {
+            // Assign a unique speed for each pipe when more than two pipes
+            // Use a base speed plus a small offset based on index
+            pipe.speed = 2 + score * 0.5 + (i * 0.5);
+        } else {
+            pipe.speed = 2 + score * 0.5;
+        }
+        pipe.x -= pipe.speed;
+        if (pipe.x + pipe.w < 0) {
+            pipe.x = canvas.width + Math.random() * 200;
+        }
+    }
+}
+
+function checkCollision(a, b) {
+    return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+}
+// Check collision with any pipe
+function checkCollisionWithAnyPipe(mario, pipes) {
+    for (let pipe of pipes) {
+        if (checkCollision(mario, pipe)) return true;
+    }
+    return false;
+}
+
+function resetGame() {
+    mario.x = 75;
+    mario.y = 390;
+    mario.vy = 0;
+    mario.onGround = false;
+    // Reset pipes array
+    pipes = [
+        {
+            x: 800,
+            y: 0,
+            w: 28,
+            h: 70,
+            speed: 2
+        }
+    ];
+    // Ensure Mario and pipes are not colliding
+    for (let pipe of pipes) {
+        while (checkCollision(mario, pipe)) {
+            pipe.x += pipe.w + 20;
+            if (pipe.x > 900) pipe.x = 900;
+        }
+    }
+    score = 0; // reset score
+    gameOver = false;
+    // Restart music on new game
+    if (themeMusic.paused || themeMusic.currentTime === 0) {
+        themeMusic.currentTime = 0;
+        themeMusic.play().then(() => {
+            playMusicBtn.style.display = 'none';
+        }).catch(() => {
+            playMusicBtn.style.display = '';
+        });
+        musicStarted = true;
+    }
+    // Do not call gameLoop here; wait for user to press Enter
+}
+
+document.addEventListener('keydown', function(e) {
+    // If user presses any key and music hasn't started, try to start music
+    if (!musicStarted) {
+        startMusic();
+    }
+    if (gameOver && (e.code === 'Enter')) {
+        resetGame();
+        gameLoop();
+    }
+});
+
+function gameLoop() {
+    // Do not auto-play music here; only play on user interaction
+    drawBackground();
+    drawFloor();
+    drawGround();
+    drawFlag();
+    drawMario();
+    drawScore();
+    updateMario();
+    updateClouds();
+    updatePipes();
+    // Collision with any pipe
+    if (checkCollisionWithAnyPipe(mario, pipes)) {
+        // Stop music immediately on collision
+        if (typeof themeMusic !== 'undefined') {
+            themeMusic.pause();
+            themeMusic.currentTime = 0;
+        }
+        ctx.font = '32px sans-serif';
+        ctx.fillStyle = 'black';
+        ctx.fillText('Game Over! Hit the Pipe!', 300, 180);
+        playError();
+        gameOver = true;
+        return;
+    }
+    // Collision with flag
+    if (checkCollision(mario, flag)) {
+        score++;
+        // Reset Mario to the left after scoring
+        mario.x = 75;
+        mario.y = 390;
+        mario.vy = 0;
+        mario.onGround = false;
+        // Play ping sound
+        playPing();
+        // Freeze for 0.5s before resuming
+        setTimeout(() => {
+            requestAnimationFrame(gameLoop);
+        }, 500);
+        return;
+    }
+// Play a bright, happy success sound using Web Audio API
+function playPing() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const gain = ctx.createGain();
+        gain.gain.value = 0.16;
+        gain.connect(ctx.destination);
+
+        // Arpeggiated notes for a happy sound
+        const notes = [1318.5, 1567.98, 2093]; // E6, G6, C7
+        notes.forEach((freq, i) => {
+            const osc = ctx.createOscillator();
+            osc.type = 'triangle';
+            osc.frequency.value = freq;
+            osc.connect(gain);
+            const start = ctx.currentTime + i * 0.06;
+            osc.start(start);
+            osc.stop(start + 0.12);
+            osc.onended = () => osc.disconnect();
+        });
+        setTimeout(() => ctx.close(), 350);
+    } catch (e) {
+        // ignore sound errors
+    }
+}
+
+// Play an error sound using Web Audio API
+function playError() {
+    try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'square';
+        osc.frequency.value = 220; // A3
+        gain.gain.value = 0.18;
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.frequency.linearRampToValueAtTime(110, ctx.currentTime + 0.18);
+        osc.stop(ctx.currentTime + 0.2);
+        osc.onended = () => ctx.close();
+    } catch (e) {
+        // ignore sound errors
+    }
+}
+
+// ...existing code...
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
 </body>
 </html>
