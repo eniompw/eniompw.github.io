@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Snake Game</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; }
+        canvas { background: #111; border: 2px solid #fff; }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const grid = 20;
+        let count = 0;
+        let snake = [{x: 160, y: 160}];
+        let dx = grid;
+        let dy = 0;
+        let food = {x: 320, y: 320};
+        let gameOver = false;
+let score = 0;
+let highScore = parseInt(localStorage.getItem('snakeHighScore')) || 0;
+
+function restartGame() {
+    snake = [{x: 160, y: 160}];
+    dx = grid;
+    dy = 0;
+    resetFood();
+    gameOver = false;
+    count = 0;
+    score = 0;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    requestAnimationFrame(gameLoop);
+}
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min) / grid) * grid + min;
+        }
+
+        function resetFood() {
+            food.x = getRandomInt(0, canvas.width - grid);
+            food.y = getRandomInt(0, canvas.height - grid);
+        }
+
+        function gameLoop() {
+            if (gameOver) {
+                // Update high score if needed
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('snakeHighScore', highScore);
+                }
+                // Draw Game Over message
+                ctx.fillStyle = 'rgba(0,0,0,0.7)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 32px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
+                ctx.font = '16px Arial';
+                ctx.fillText('Score: ' + score, canvas.width / 2, canvas.height / 2 + 24);
+                ctx.fillText('High Score: ' + highScore, canvas.width / 2, canvas.height / 2 + 44);
+                ctx.fillText('Press Space to Restart', canvas.width / 2, canvas.height / 2 + 68);
+                return;
+            }
+            requestAnimationFrame(gameLoop);
+            if (++count < 4) return;
+            count = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw score and high score
+            ctx.fillStyle = '#fff';
+            ctx.font = '16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('Score: ' + score, 10, 24);
+            ctx.fillText('High Score: ' + highScore, 10, 44);
+
+            // Move snake
+            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+
+            // Check collision with food
+            if (head.x === food.x && head.y === food.y) {
+                score++;
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('snakeHighScore', highScore);
+                }
+                resetFood();
+            } else {
+                snake.pop();
+            }
+
+            // Draw food
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, grid, grid);
+
+            // Draw snake
+            ctx.fillStyle = 'lime';
+            snake.forEach((segment, i) => {
+                ctx.fillRect(segment.x, segment.y, grid, grid);
+                // Check collision with self
+                if (i > 0 && head.x === segment.x && head.y === segment.y) {
+                    gameOver = true;
+                }
+            });
+
+            // Check wall collision
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                gameOver = true;
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
+            else if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
+            else if (e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
+            else if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
+            else if (e.code === 'Space') {
+                restartGame();
+            }
+        });
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
