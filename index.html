@@ -3,132 +3,326 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Snake Game</title>
+    <title>Computing Topics & Tutorials - Teacher Portal</title>
     <style>
-        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; }
-        canvas { background: #111; border: 2px solid #fff; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        h1 {
+            color: #2c3e50;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            font-weight: 300;
+        }
+        
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .resource-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 5px solid transparent;
+        }
+        
+        .resource-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+        }
+        
+        .resource-card.programming {
+            border-left-color: #3498db;
+        }
+        
+        .resource-card.theory {
+            border-left-color: #e74c3c;
+        }
+        
+        .resource-card.interactive {
+            border-left-color: #2ecc71;
+        }
+        
+        .card-icon {
+            font-size: 2.5em;
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .programming .card-icon {
+            color: #3498db;
+        }
+        
+        .theory .card-icon {
+            color: #e74c3c;
+        }
+        
+        .interactive .card-icon {
+            color: #2ecc71;
+        }
+        
+        .card-title {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            font-weight: 600;
+        }
+        
+        .card-description {
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        
+        .card-link {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            text-decoration: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        .card-link:hover {
+            background: linear-gradient(45deg, #764ba2, #667eea);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        .features {
+            margin-top: 50px;
+            text-align: center;
+        }
+        
+        .features h2 {
+            color: #2c3e50;
+            font-size: 2em;
+            margin-bottom: 30px;
+        }
+        
+        .features-list {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .feature-item {
+            background: rgba(255, 255, 255, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            flex: 1;
+            min-width: 200px;
+            max-width: 300px;
+        }
+        
+        .feature-item h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            padding-top: 20px;
+            border-top: 2px solid #ecf0f1;
+            color: #7f8c8d;
+        }
+        
+        .quick-links {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .quick-link {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 10px 20px;
+            border-radius: 20px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .quick-link:hover {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                padding: 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .resources-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .features-list {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
     </style>
 </head>
 <body>
-    <canvas id="game" width="400" height="400"></canvas>
+    <div class="container">
+        <header>
+            <h1>🖥️ Computing Topics & Tutorials</h1>
+            <p class="subtitle">Interesting computing concepts and practical examples for learning and exploration</p>
+        </header>
+        
+        <main>
+            <div class="resources-grid">
+                <div class="resource-card theory">
+                    <span class="card-icon">📚</span>
+                    <h3 class="card-title">Python Code Translation Guide</h3>
+                    <p class="card-description">
+                        Ever wondered how Python converts your code into something the computer can run? 
+                        This guide walks through the fascinating journey from source code to bytecode, 
+                        covering tokenization, AST parsing, and virtual machine execution. Great for curious minds!
+                    </p>
+                    <a href="python-bytecode.html" class="card-link">
+                        View Guide →
+                    </a>
+                </div>
+                
+                <div class="resource-card interactive">
+                    <span class="card-icon">🐍</span>
+                    <h3 class="card-title">VibeCode Snake Game</h3>
+                    <p class="card-description">
+                        Classic Snake game built with HTML5 and JavaScript! A fun way to see programming 
+                        concepts like loops, arrays, and collision detection in action. Play it for fun 
+                        or explore the code to see how it all works together.
+                    </p>
+                    <a href="snake-game.html" class="card-link">
+                        Play Game →
+                    </a>
+                </div>
+                
+                <div class="resource-card programming">
+                    <span class="card-icon">💻</span>
+                    <h3 class="card-title">More Topics Coming Soon</h3>
+                    <p class="card-description">
+                        Planning to add more interesting computing topics and interactive examples! 
+                        Think algorithms in action, data structures visualized, web development tricks, 
+                        and other cool programming concepts that make computing fun and accessible.
+                    </p>
+                    <a href="#" class="card-link" onclick="alert('More topics coming soon!')">
+                        Stay Tuned →
+                    </a>
+                </div>
+            </div>
+            
+            <div class="features">
+                <h2>What Makes Computing Interesting</h2>
+                <div class="features-list">
+                    <div class="feature-item">
+                        <h3>🔍 Behind the Scenes</h3>
+                        <p>Explore how programming languages and computers actually work under the hood</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>🎮 Learning by Doing</h3>
+                        <p>Interactive examples and games that make abstract concepts tangible and fun</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>📚 Useful for Study</h3>
+                        <p>Topics that might pop up in computing courses, exams, or just satisfy your curiosity</p>
+                    </div>
+                    <div class="feature-item">
+                        <h3>💡 Practical Insights</h3>
+                        <p>Real examples that connect theory to what actually happens when code runs</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="quick-links">
+                <a href="python-bytecode.html" class="quick-link">Python Guide</a>
+                <a href="snake-game.html" class="quick-link">Snake Game</a>
+                <a href="README.md" class="quick-link">About</a>
+            </div>
+        </main>
+        
+        <footer>
+            <p>&copy; 2025 Computing Topics & Tutorials | Made with curiosity and code</p>
+            <p>💡 <em>Exploring the fascinating world of computing, one topic at a time</em></p>
+        </footer>
+    </div>
+
     <script>
-        const canvas = document.getElementById('game');
-        const ctx = canvas.getContext('2d');
-        const grid = 20;
-        let count = 0;
-        let speed = 8; // higher is slower
-        let snake = [{x: 160, y: 200}];
-        let dx = grid;
-        let dy = 0;
-        let food = {x: 320, y: 200};
-        let gameOver = false;
-        let showGameOver = false;
-        let score = 0;
-        let highscore = parseInt(localStorage.getItem('snakeHighscore')) || 0;
-
-        function getRandomInt(min, max) {
-            return Math.floor(Math.random() * (max - min) / grid) * grid + min;
-        }
-
-        function resetFood() {
-            food.x = getRandomInt(0, canvas.width - grid);
-            food.y = getRandomInt(0, canvas.height - grid);
-        }
-
-        function drawScore() {
-            ctx.font = '20px Arial';
-            ctx.fillStyle = 'yellow';
-            ctx.textAlign = 'left';
-            ctx.fillText('Score: ' + score, 10, 28);
-            ctx.textAlign = 'right';
-            ctx.fillStyle = 'orange';
-            ctx.fillText('Highscore: ' + highscore, canvas.width - 10, 28);
-        }
-
-        function gameLoop() {
-            if (gameOver) {
-                drawGameOver();
-                drawScore();
-                return;
-            }
-            requestAnimationFrame(gameLoop);
-            if (++count < speed) return;
-            count = 0;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
-            snake.unshift(head);
-
-            if (head.x === food.x && head.y === food.y) {
-                resetFood();
-                score++;
-                // Speed up every time an apple is eaten, minimum speed is 2
-                if (speed > 2) {
-                    speed--;
-                }
-                if (score > highscore) {
-                    highscore = score;
-                    localStorage.setItem('snakeHighscore', highscore);
-                }
-            } else {
-                snake.pop();
-            }
-
-            ctx.fillStyle = 'lime';
-            snake.forEach((segment, i) => {
-                ctx.fillRect(segment.x, segment.y, grid-2, grid-2);
-                if (i !== 0 && head.x === segment.x && head.y === segment.y) {
-                    gameOver = true;
-                }
+        // Add some interactive effects
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate cards on load
+            const cards = document.querySelectorAll('.resource-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
             });
-
-            ctx.fillStyle = 'red';
-            ctx.fillRect(food.x, food.y, grid-2, grid-2);
-
-            drawScore();
-
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                gameOver = true;
-            }
-            if (gameOver) drawGameOver();
-        }
-
-        function drawGameOver() {
-            ctx.fillStyle = 'rgba(0,0,0,0.7)';
-            ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
-            ctx.font = 'bold 36px Arial';
-            ctx.fillStyle = 'white';
-            ctx.textAlign = 'center';
-            ctx.fillText('Game Over!', canvas.width/2, canvas.height/2 + 12);
-            ctx.font = '20px Arial';
-            ctx.fillText('Press Space to Restart', canvas.width/2, canvas.height/2 + 44);
-        }
-
-        function restartGame() {
-            snake = [{x: 160, y: 200}];
-            dx = grid;
-            dy = 0;
-            resetFood();
-            gameOver = false;
-            count = 0;
-            score = 0;
-            speed = 8;
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            requestAnimationFrame(gameLoop);
-        }
-
-        document.addEventListener('keydown', e => {
-            if (gameOver && e.code === 'Space') {
-                restartGame();
-                return;
-            }
-            if (e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
-            else if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
-            else if (e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
-            else if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
+            
+            // Add click tracking (for analytics if needed)
+            document.querySelectorAll('.card-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    console.log('Topic accessed:', this.textContent);
+                });
+            });
         });
-
-        requestAnimationFrame(gameLoop);
     </script>
 </body>
 </html>

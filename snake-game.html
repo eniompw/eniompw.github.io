@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Snake Game</title>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; background: #222; }
+        canvas { background: #111; border: 2px solid #fff; }
+    </style>
+</head>
+<body>
+    <canvas id="game" width="400" height="400"></canvas>
+    <script>
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const grid = 20;
+        let count = 0;
+        let speed = 8; // higher is slower
+        let snake = [{x: 160, y: 200}];
+        let dx = grid;
+        let dy = 0;
+        let food = {x: 320, y: 200};
+        let gameOver = false;
+        let showGameOver = false;
+        let score = 0;
+        let highscore = parseInt(localStorage.getItem('snakeHighscore')) || 0;
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min) / grid) * grid + min;
+        }
+
+        function resetFood() {
+            food.x = getRandomInt(0, canvas.width - grid);
+            food.y = getRandomInt(0, canvas.height - grid);
+        }
+
+        function drawScore() {
+            ctx.font = '20px Arial';
+            ctx.fillStyle = 'yellow';
+            ctx.textAlign = 'left';
+            ctx.fillText('Score: ' + score, 10, 28);
+            ctx.textAlign = 'right';
+            ctx.fillStyle = 'orange';
+            ctx.fillText('Highscore: ' + highscore, canvas.width - 10, 28);
+        }
+
+        function gameLoop() {
+            if (gameOver) {
+                drawGameOver();
+                drawScore();
+                return;
+            }
+            requestAnimationFrame(gameLoop);
+            if (++count < speed) return;
+            count = 0;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            let head = {x: snake[0].x + dx, y: snake[0].y + dy};
+            snake.unshift(head);
+
+            if (head.x === food.x && head.y === food.y) {
+                resetFood();
+                score++;
+                // Speed up every time an apple is eaten, minimum speed is 2
+                if (speed > 2) {
+                    speed--;
+                }
+                if (score > highscore) {
+                    highscore = score;
+                    localStorage.setItem('snakeHighscore', highscore);
+                }
+            } else {
+                snake.pop();
+            }
+
+            ctx.fillStyle = 'lime';
+            snake.forEach((segment, i) => {
+                ctx.fillRect(segment.x, segment.y, grid-2, grid-2);
+                if (i !== 0 && head.x === segment.x && head.y === segment.y) {
+                    gameOver = true;
+                }
+            });
+
+            ctx.fillStyle = 'red';
+            ctx.fillRect(food.x, food.y, grid-2, grid-2);
+
+            drawScore();
+
+            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
+                gameOver = true;
+            }
+            if (gameOver) drawGameOver();
+        }
+
+        function drawGameOver() {
+            ctx.fillStyle = 'rgba(0,0,0,0.7)';
+            ctx.fillRect(0, canvas.height/2 - 40, canvas.width, 80);
+            ctx.font = 'bold 36px Arial';
+            ctx.fillStyle = 'white';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over!', canvas.width/2, canvas.height/2 + 12);
+            ctx.font = '20px Arial';
+            ctx.fillText('Press Space to Restart', canvas.width/2, canvas.height/2 + 44);
+        }
+
+        function restartGame() {
+            snake = [{x: 160, y: 200}];
+            dx = grid;
+            dy = 0;
+            resetFood();
+            gameOver = false;
+            count = 0;
+            score = 0;
+            speed = 8;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.addEventListener('keydown', e => {
+            if (gameOver && e.code === 'Space') {
+                restartGame();
+                return;
+            }
+            if (e.key === 'ArrowLeft' && dx === 0) { dx = -grid; dy = 0; }
+            else if (e.key === 'ArrowUp' && dy === 0) { dx = 0; dy = -grid; }
+            else if (e.key === 'ArrowRight' && dx === 0) { dx = grid; dy = 0; }
+            else if (e.key === 'ArrowDown' && dy === 0) { dx = 0; dy = grid; }
+        });
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>

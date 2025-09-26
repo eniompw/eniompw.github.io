@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Code Translation: From Source to Bytecode</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f9f9f9;
+        }
+        
+        .container {
+            background-color: white;
+            padding: 40px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        h1 {
+            color: #2c3e50;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+        }
+        
+        h2 {
+            color: #34495e;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        
+        hr {
+            border: none;
+            border-top: 2px solid #ecf0f1;
+            margin: 30px 0;
+        }
+        
+        code {
+            background-color: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+        
+        pre {
+            background-color: #2c3e50;
+            color: #ecf0f1;
+            padding: 20px;
+            border-radius: 5px;
+            overflow-x: auto;
+            margin: 20px 0;
+        }
+        
+        pre code {
+            background-color: transparent;
+            padding: 0;
+            color: inherit;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: 600;
+        }
+        
+        tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        tr:hover {
+            background-color: #e8f4f8;
+        }
+        
+        ul {
+            padding-left: 20px;
+        }
+        
+        li {
+            margin-bottom: 8px;
+        }
+        
+        strong {
+            color: #2c3e50;
+        }
+        
+        .summary {
+            background-color: #e8f6f3;
+            padding: 20px;
+            border-left: 4px solid #27ae60;
+            border-radius: 0 5px 5px 0;
+            margin: 30px 0;
+        }
+        
+        .footnotes {
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 0.9em;
+            color: #666;
+        }
+        
+        .footnotes a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        .footnotes a:hover {
+            text-decoration: underline;
+        }
+        
+        .center {
+            text-align: center;
+            font-size: 1.5em;
+            color: #7f8c8d;
+            margin: 30px 0;
+        }
+        
+        .logo-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-header">
+            <img src="https://r2cdn.perplexity.ai/pplx-full-logo-primary-dark%402x.png" style="height:64px;margin-right:32px" alt="Perplexity Logo"/>
+        </div>
+        
+        <h1>Python Code Translation: From Source to Bytecode</h1>
+
+        <p>Let's walk through how Python translates your code from plain text to bytecode, step by step. We'll use this example:</p>
+
+        <pre><code>a = 6
+b = 4
+print(a + b)</code></pre>
+
+        <hr>
+
+        <h2>1. Source Code (Text)</h2>
+
+        <p>This is the code you write in a <code>.py</code> file. It's just text, readable by humans.</p>
+
+        <hr>
+
+        <h2>2. Tokenization</h2>
+
+        <p>Python first breaks your code into <strong>tokens</strong>—the smallest meaningful elements (like names, numbers, and operators).</p>
+
+        <p><strong>Example tokens:</strong></p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Token Type</th>
+                    <th>Token Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>NAME</td>
+                    <td>'a'</td>
+                </tr>
+                <tr>
+                    <td>OP</td>
+                    <td>'='</td>
+                </tr>
+                <tr>
+                    <td>NUMBER</td>
+                    <td>'6'</td>
+                </tr>
+                <tr>
+                    <td>NEWLINE</td>
+                    <td>'\n'</td>
+                </tr>
+                <tr>
+                    <td>NAME</td>
+                    <td>'b'</td>
+                </tr>
+                <tr>
+                    <td>OP</td>
+                    <td>'='</td>
+                </tr>
+                <tr>
+                    <td>NUMBER</td>
+                    <td>'4'</td>
+                </tr>
+                <tr>
+                    <td>NEWLINE</td>
+                    <td>'\n'</td>
+                </tr>
+                <tr>
+                    <td>NAME</td>
+                    <td>'print'</td>
+                </tr>
+                <tr>
+                    <td>OP</td>
+                    <td>'('</td>
+                </tr>
+                <tr>
+                    <td>NAME</td>
+                    <td>'a'</td>
+                </tr>
+                <tr>
+                    <td>OP</td>
+                    <td>'+'</td>
+                </tr>
+                <tr>
+                    <td>NAME</td>
+                    <td>'b'</td>
+                </tr>
+                <tr>
+                    <td>OP</td>
+                    <td>')'</td>
+                </tr>
+                <tr>
+                    <td>NEWLINE</td>
+                    <td>'\n'</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <h2>3. Parsing and AST (Abstract Syntax Tree)</h2>
+
+        <p>Next, Python organizes the tokens into a tree structure that represents the meaning of your code. This is called the <strong>AST</strong>.</p>
+
+        <p><strong>AST Outline:</strong></p>
+
+        <ul>
+            <li>Module
+                <ul>
+                    <li>Assign (a = 6)</li>
+                    <li>Assign (b = 4)</li>
+                    <li>Expr (print(a + b))
+                        <ul>
+                            <li>Call
+                                <ul>
+                                    <li>func: print</li>
+                                    <li>args:
+                                        <ul>
+                                            <li>BinOp (a + b)</li>
+                                        </ul>
+                                    </li>
+                                </ul>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </li>
+        </ul>
+
+        <p>This tree shows how each part of your code relates to the others.</p>
+
+        <hr>
+
+        <h2>4. Compilation to Bytecode</h2>
+
+        <p>Python then compiles the AST into <strong>bytecode</strong>—a set of instructions for the Python Virtual Machine (PVM).</p>
+
+        <p><strong>Example bytecode (using <code>dis</code> module):</strong></p>
+
+        <pre><code>  1           0 LOAD_CONST               0 (6)
+              2 STORE_NAME               0 (a)
+  2           4 LOAD_CONST               1 (4)
+              6 STORE_NAME               1 (b)
+  3           8 LOAD_NAME                2 (print)
+             10 LOAD_NAME                0 (a)
+             12 LOAD_NAME                1 (b)
+             14 BINARY_OP                0 (+)
+             16 PRECALL                  1
+             18 CALL                     1
+             20 POP_TOP
+             22 LOAD_CONST               2 (None)
+             24 RETURN_VALUE</code></pre>
+
+        <p>Each line is a low-level instruction that the PVM can execute.</p>
+
+        <hr>
+
+        <h2>5. Execution</h2>
+
+        <p>The Python Virtual Machine runs the bytecode, performing the actual calculations and function calls.</p>
+
+        <hr>
+
+        <h2>Summary Table</h2>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Step</th>
+                    <th>What Happens</th>
+                    <th>Example Output/Structure</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Source Code</td>
+                    <td>Human-readable text</td>
+                    <td><code>a = 6</code></td>
+                </tr>
+                <tr>
+                    <td>Tokenization</td>
+                    <td>Break into tokens</td>
+                    <td><code>NAME</code>, <code>OP</code>, <code>NUMBER</code>, ...</td>
+                </tr>
+                <tr>
+                    <td>AST</td>
+                    <td>Build tree of code structure</td>
+                    <td>Assign, BinOp, Call, ...</td>
+                </tr>
+                <tr>
+                    <td>Bytecode</td>
+                    <td>Compile to VM instructions</td>
+                    <td><code>LOAD_CONST</code>, <code>STORE_NAME</code>, ...</td>
+                </tr>
+                <tr>
+                    <td>Execution</td>
+                    <td>Python VM runs the bytecode</td>
+                    <td>Output: <code>10</code></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <hr>
+
+        <div class="summary">
+            <p><strong>In short:</strong> Python takes your code through tokenization, parsing (AST), compilation to bytecode, and finally execution. Each step helps Python understand and run your code efficiently.</p>
+        </div>
+
+        <div class="center">⁂</div>
+
+        <div class="footnotes">
+            <p>References:</p>
+            <ol>
+                <li><a href="https://lokalise.com/blog/how-to-translate-languages-in-python-with-google-translate-and-deepl-plus-more/" target="_blank">How to Translate Languages in Python</a></li>
+                <li><a href="https://thepythoncode.com/article/translate-text-in-python" target="_blank">Translate Text in Python</a></li>
+                <li><a href="https://www.w3schools.com/python/ref_string_translate.asp" target="_blank">Python String translate() Method</a></li>
+                <li><a href="https://www.youtube.com/watch?v=N3bwZyJ9zLo" target="_blank">Python Translation Tutorial Video</a></li>
+                <li><a href="https://centus.com/blog/python-gettext-translation" target="_blank">Python Gettext Translation</a></li>
+                <li><a href="https://spotintelligence.com/2022/12/19/translate-text-python/" target="_blank">Translate Text with Python</a></li>
+                <li><a href="https://www.pythonguis.com/examples/translator-app-tkinter-google/" target="_blank">Python Translator App with Tkinter</a></li>
+                <li><a href="https://www.geeksforgeeks.org/nlp/machine-translation-with-transformer-in-python/" target="_blank">Machine Translation with Transformer in Python</a></li>
+                <li><a href="https://www.instructables.com/Tutorial-How-to-Make-a-Universal-Language-Translat/" target="_blank">Universal Language Translator Tutorial</a></li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>
